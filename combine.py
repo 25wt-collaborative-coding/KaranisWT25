@@ -67,12 +67,32 @@ if image is None:
 handwritten_image, handwritten_contours = isolate_handwritten_text_by_contours(filename)
 
 # Visualize the contours on the original image
+# Perform OCR with pytesseract
+results = pytesseract.image_to_data(image, output_type=Output.DICT)
+
+# Iterate through OCR results
+for i in range(0, len(results['text'])):
+    #draw a box around the word
+    x = results['left'][i]
+    y = results['top'][i]
+    w = results['width'][i]
+    h = results['height'][i]
+    text = results['text'][i]
+    conf = int(results['conf'][i])
+    print(conf)
+
+    # Draw rectangles and display text for high-confidence results
+    if conf > 50:
+        text = "".join([c if ord(c) < 128 else "" for c in text]).strip()
+        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 0), 2)
+        cv2.putText(image, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 200), 2)
+        
 contoured_image = image.copy()
 for contour in handwritten_contours:
     x, y, w, h = cv2.boundingRect(contour)
     #print(x*h)
     print(w*h)
-    if (w*h) > 600:
+    if (w*h) > 650:
         cv2.rectangle(contoured_image, (x, y), (x + w, y + h), (0, 0, 255), 2)  # Red box for machine text
     else:
         cv2.rectangle(contoured_image, (x, y), (x + w, y + h), (0, 255, 0), 2)  # Green box for handwritten
@@ -83,3 +103,10 @@ cv2.imshow("Isolated Handwritten Text", handwritten_image)
 cv2.imshow("Contours Highlighted", contoured_image)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
+
+
+''' To implement:
+collect words (black boxes) and count green/red boxes inside. If the majority of boxes are green, recognize as 
+machine text and report the word back. Otherwise, recognize as handwritten and flag. Testing.py has sort of
+what this should look like in the end. '''

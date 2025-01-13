@@ -4,7 +4,7 @@ from pytesseract import Output
 import pytesseract
 import cv2
 
-filename = 'image4.png'
+filename = 'image5.png'
 image = cv2.imread(filename)
 
 # Verify the image is loaded
@@ -26,7 +26,7 @@ for i in range(0, len(results['text'])):
     print(conf)
 
     # Draw rectangles and display text for high-confidence results
-    if conf > 70:
+    if conf > 50:
         text = "".join([c if ord(c) < 128 else "" for c in text]).strip()
         cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
         cv2.putText(image, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 200), 2)
