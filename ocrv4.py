@@ -31,12 +31,14 @@ for i in range(len(results['text'])):
 
 
     # Analyze confidence levels
-    if conf < 60:  # Low confidence indicates possible handwriting
+    if conf <= 60 and conf > 30:  # Low confidence indicates possible handwriting
         color = (0, 0, 255)  # Red for handwritten
         print(Color.UNDERLINE + text + Color.END, end=" ")
-    else:
+    elif conf > 60 :
         color = (0, 255, 0)  # Green for machine-printed
         print(text, end=" ")
+    else :
+        color = (0, 0, 0)
 
     # Draw bounding box
     cv2.rectangle(image, (x, y), (x + w, y + h), color, 2)
