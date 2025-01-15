@@ -79,7 +79,7 @@ for i in range(0, len(results['text'])):
     h = results['height'][i]
     text = results['text'][i]
     conf = int(results['conf'][i])
-    print(conf)
+    print(text, end =" ")
 
     # Draw rectangles and display text for high-confidence results
     if conf > 50:
@@ -91,7 +91,6 @@ contoured_image = image.copy()
 for contour in handwritten_contours:
     x, y, w, h = cv2.boundingRect(contour)
     #print(x*h)
-    print(w*h)
     if (w*h) > 650:
         cv2.rectangle(contoured_image, (x, y), (x + w, y + h), (0, 0, 255), 2)  # Red box for machine text
     else:
