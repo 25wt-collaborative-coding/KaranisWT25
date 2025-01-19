@@ -7,7 +7,7 @@ from tensorflow.keras import layers, models
 from sklearn.preprocessing import LabelEncoder
 
 # Define constants
-TARGET_HEIGHT = 64
+TARGET_HEIGHT = 32
 TARGET_WIDTH = 128
 letter_list = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 
@@ -117,7 +117,7 @@ def create_model(input_shape, num_classes):
     return model
 
 # Example usage
-input_shape = (64, 128, 1)  # (Height, Width, Channels)
+input_shape = (32, 128, 1)  # (Height, Width, Channels)
 num_classes = len(letter_list)  # Number of classes (26 letters)
 model = create_model(input_shape, num_classes)
 model.summary()
@@ -145,24 +145,15 @@ history = model.fit(
     validation_split=0.2
 )
 
-test_loss, test_accuracy = model.evaluate(test_images, test_labels_encoded)
-print(f"Test accuracy: {test_accuracy:.2f}")
-
-correct = 0
-wrong = 0
 # Example prediction
 for i in range(len(test_images)-1):
-    sample_image = test_images[i]  # Replace with any image
+    sample_image = test_images[i]  
     sample_image = np.expand_dims(sample_image, axis=0)  # Add batch dimension
     prediction = model.predict(sample_image)
     predicted_label = label_encoder.inverse_transform([np.argmax(prediction)])
-    if predicted_label[0] == test_labels[i]:
-        correct = correct + 1
-    else :
-        wrong = wrong + 1
     print(f"Predicted Label: {predicted_label[0]}")
     print(f"Actual Label: {test_labels[i]}")
 
-print(correct/len(test_images))
-
+test_loss, test_accuracy = model.evaluate(test_images, test_labels_encoded)
+print(f"Test accuracy: {test_accuracy:.2f}")
 
