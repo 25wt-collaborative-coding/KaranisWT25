@@ -101,7 +101,7 @@ print(f"Test set: {len(test_images)} images")
 #
 def create_model(input_shape, num_classes):
     model = models.Sequential([
-        # Convolutional layers
+        # Convolutional and pooling layers
         layers.Conv2D(32, (3, 3), activation='relu', input_shape=input_shape),
         layers.MaxPooling2D((2, 2)),
         layers.Conv2D(64, (3, 3), activation='relu'),
@@ -144,9 +144,6 @@ history = model.fit(
     batch_size=32, 
     validation_split=0.2
 )
-
-test_loss, test_accuracy = model.evaluate(test_images, test_labels_encoded)
-print(f"Test accuracy: {test_accuracy:.2f}")
 
 test_loss, test_accuracy = model.evaluate(test_images, test_labels_encoded)
 print(f"Test accuracy: {test_accuracy:.2f}")
