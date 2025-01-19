@@ -48,7 +48,7 @@ for letter in letter_list:
     random.shuffle(dir_list)
 
     # Calculate the split index
-    split_index = 2
+    split_index = 4
 
     # Split the data into training and test sets
     train_files = dir_list[split_index:]
@@ -140,7 +140,7 @@ test_labels_encoded = label_encoder.transform(test_labels)
 history = model.fit(
     train_images, 
     train_labels_encoded, 
-    epochs=75, 
+    epochs=50, 
     batch_size=32, 
     validation_split=0.2
 )
