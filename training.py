@@ -1,16 +1,22 @@
 import cv2
-import os 
+import os
 import random
 import numpy as np
+import tensorflow as tf
+from tensorflow.keras import layers, models
+from sklearn.preprocessing import LabelEncoder
 
-# Get the list of all files and directories
+# Define constants
+TARGET_HEIGHT = 64
+TARGET_WIDTH = 128
 letter_list = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
-train_image_list = []
-test_image_list = [] 
-train_image_list_names = [] #test
-test_image_list_names = [] #test
 
+# Resize function
 def resize_image(image, target_height, target_width):
+    """
+    Resizes an image to the specified height while maintaining aspect ratio,
+    then pads or crops it to fit the specified width.
+    """
     h, w = image.shape
     scale = target_height / h
     new_width = int(w * scale)
@@ -23,64 +29,143 @@ def resize_image(image, target_height, target_width):
     else:
         return resized[:, :target_width]
 
-#standardize images
+# Prepare dataset
+train_images, train_labels = [], []
+test_images, test_labels = [], []
+
 for letter in letter_list:
-    path = "./dataset/" + letter
+    path = f"./dataset/{letter}"
+    if not os.path.exists(path):
+        print(f"Directory {path} does not exist. Skipping.")
+        continue
+
     dir_list = os.listdir(path)
-    index = 0
-    for i in dir_list:
-        if i == ".DS_Store":
-            dir_list.pop(index)
-        index = index + 1    
-    dir_list.pop(0)
-    for i in dir_list:
-        image_path = "./dataset/"+ letter + "/" + i
-        image = cv2.imread("./dataset/"+ letter + "/" + i, cv2.IMREAD_GRAYSCALE)
-        image = image / 255.0
-        resize_image(image, 32, 128)
 
+    # Remove system files like ".DS_Store"
+    dir_list = [file for file in dir_list if not file.startswith(".")]
 
-#split data
-for letter in letter_list:
-    path = "./dataset/" + letter
-    dir_list = os.listdir(path)
-    index = 0
-    for i in dir_list:
-        if i == ".DS_Store":
-            dir_list.pop(index)
-        index = index + 1    
-    dir_list.pop(0)
-    file_list = []
-    file_name_list = [] #test 
-    for i in dir_list:
-        image_path = "./dataset/"+ letter + "/" + i
-        image = cv2.imread("./dataset/"+ letter + "/" + i)
-        image_name = os.path.basename(image_path) #test
-        file_name_list.append(image_name) #test
-        file_list.append(image) 
-    n = 2
-    random.shuffle(file_list)
-    random.shuffle(file_name_list) #test
-    train_image_list.append(file_list[:n])
-    test_image_list.append(file_list[n:])
-    train_image_list_names.append(file_name_list[:n]) #test
-    test_image_list_names.append(file_name_list[n:]) #test
-    
-#test
-print("TRAINING SET: ")
-print(train_image_list_names)
-print()
-print("TEST SET:")
-print(test_image_list_names)
+    # Shuffle the file list for randomness
+    random.shuffle(dir_list)
 
+    # Calculate the split index
+    split_index = 2
 
+    # Split the data into training and test sets
+    train_files = dir_list[split_index:]
+    test_files = dir_list[:split_index]
 
+    # Process training files
+    for file_name in train_files:
+        image_path = os.path.join(path, file_name)
+        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
-    
+        if image is None:
+            print(f"Could not read {image_path}. Skipping.")
+            continue
 
+        # Resize and normalize
+        resized_image = resize_image(image, TARGET_HEIGHT, TARGET_WIDTH)
+        normalized_image = resized_image / 255.0
 
+        # Add to training set
+        train_images.append(normalized_image)
+        train_labels.append(letter)
 
+    # Process test files
+    for file_name in test_files:
+        image_path = os.path.join(path, file_name)
+        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
-    
+        if image is None:
+            print(f"Could not read {image_path}. Skipping.")
+            continue
+
+        # Resize and normalize
+        resized_image = resize_image(image, TARGET_HEIGHT, TARGET_WIDTH)
+        normalized_image = resized_image / 255.0
+
+        # Add to test set
+        test_images.append(normalized_image)
+        test_labels.append(letter)
+
+# Convert lists to NumPy arrays
+train_images = np.array(train_images)
+test_images = np.array(test_images)
+train_labels = np.array(train_labels)
+test_labels = np.array(test_labels)
+
+# Print summary
+print(f"Training set: {len(train_images)} images")
+print(f"Test set: {len(test_images)} images")
+
+#
+def create_model(input_shape, num_classes):
+    model = models.Sequential([
+        # Convolutional layers
+        layers.Conv2D(32, (3, 3), activation='relu', input_shape=input_shape),
+        layers.MaxPooling2D((2, 2)),
+        layers.Conv2D(64, (3, 3), activation='relu'),
+        layers.MaxPooling2D((2, 2)),
+        layers.Conv2D(128, (3, 3), activation='relu'),
+
+        # Flatten and fully connected layers
+        layers.Flatten(),
+        layers.Dense(128, activation='relu'),
+        layers.Dropout(0.5),
+        layers.Dense(num_classes, activation='softmax')
+    ])
+    return model
+
+# Example usage
+input_shape = (64, 128, 1)  # (Height, Width, Channels)
+num_classes = len(letter_list)  # Number of classes (26 letters)
+model = create_model(input_shape, num_classes)
+model.summary()
+
+model.compile(
+    optimizer='adam', 
+    loss='sparse_categorical_crossentropy', 
+    metrics=['accuracy']
+)
+
+# Reshape images
+train_images = train_images[..., np.newaxis]  # Add channel dimension
+test_images = test_images[..., np.newaxis]
+
+# Encode labels
+label_encoder = LabelEncoder()
+train_labels_encoded = label_encoder.fit_transform(train_labels)
+test_labels_encoded = label_encoder.transform(test_labels)
+
+history = model.fit(
+    train_images, 
+    train_labels_encoded, 
+    epochs=75, 
+    batch_size=32, 
+    validation_split=0.2
+)
+
+test_loss, test_accuracy = model.evaluate(test_images, test_labels_encoded)
+print(f"Test accuracy: {test_accuracy:.2f}")
+
+test_loss, test_accuracy = model.evaluate(test_images, test_labels_encoded)
+print(f"Test accuracy: {test_accuracy:.2f}")
+
+correct = 0
+wrong = 0
+# Example prediction
+for i in range(len(test_images)-1):
+    sample_image = test_images[i]  # Replace with any image
+    sample_image = np.expand_dims(sample_image, axis=0)  # Add batch dimension
+    prediction = model.predict(sample_image)
+    predicted_label = label_encoder.inverse_transform([np.argmax(prediction)])
+    if predicted_label[0] == test_labels[i]:
+        correct = correct + 1
+    else :
+        wrong = wrong + 1
+    print(f"Predicted Label: {predicted_label[0]}")
+    print(f"Actual Label: {test_labels[i]}")
+
+print(correct/len(test_images))
 
 
