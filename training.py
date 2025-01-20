@@ -11,6 +11,7 @@ TARGET_HEIGHT = 32
 TARGET_WIDTH = 128
 letter_list = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 
+
 # Resize function
 def resize_image(image, target_height, target_width):
     """
