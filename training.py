@@ -5,6 +5,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers, models
 from sklearn.preprocessing import LabelEncoder
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
 
 # Define constants
 TARGET_HEIGHT = 32
@@ -49,7 +51,7 @@ for letter in letter_list:
     random.shuffle(dir_list)
 
     # Calculate the split index
-    split_index = 4
+    split_index = 8
 
     # Split the data into training and test sets
     train_files = dir_list[split_index:]
@@ -99,7 +101,7 @@ test_labels = np.array(test_labels)
 print(f"Training set: {len(train_images)} images")
 print(f"Test set: {len(test_images)} images")
 
-#
+#CNN
 def create_model(input_shape, num_classes):
     model = models.Sequential([
         # Convolutional and pooling layers
@@ -117,7 +119,6 @@ def create_model(input_shape, num_classes):
     ])
     return model
 
-# Example usage
 input_shape = (32, 128, 1)  # (Height, Width, Channels)
 num_classes = len(letter_list)  # Number of classes (26 letters)
 model = create_model(input_shape, num_classes)
@@ -138,15 +139,27 @@ label_encoder = LabelEncoder()
 train_labels_encoded = label_encoder.fit_transform(train_labels)
 test_labels_encoded = label_encoder.transform(test_labels)
 
-history = model.fit(
-    train_images, 
-    train_labels_encoded, 
-    epochs=50, 
-    batch_size=32, 
-    validation_split=0.2
+# Define data augmentation
+datagen = ImageDataGenerator(
+    rotation_range=5,        # Rotate images slightly
+    width_shift_range=0.1,   # Shift images horizontally (10% of the width)
+    height_shift_range=0.1,  # Shift images vertically (10% of the height)
+    shear_range=0.1,         # Shear transformations
+    zoom_range=0.1           # Zoom in/out
 )
 
-# Example prediction
+# Normalize images directly in the generator
+datagen.fit(train_images)
+
+# Fit the model using the augmented data, run the model
+history = model.fit(
+    datagen.flow(train_images, train_labels_encoded, batch_size=32),  # Augmented data generator
+    epochs=175, 
+    validation_data=(test_images, test_labels_encoded)  # Validation data remains unaugmented
+)
+
+
+# Run model on all test images
 for i in range(len(test_images)-1):
     sample_image = test_images[i]  
     sample_image = np.expand_dims(sample_image, axis=0)  # Add batch dimension
