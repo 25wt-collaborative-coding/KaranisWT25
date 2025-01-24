@@ -51,7 +51,7 @@ for letter in letter_list:
     random.shuffle(dir_list)
 
     # Calculate the split index
-    split_index = 4
+    split_index = 8
 
     # Split the data into training and test sets
     train_files = dir_list[split_index:]
