@@ -5,7 +5,7 @@ import pytesseract
 
 letter_list = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 
-# Load your pre-trained model
+# Load pre-trained model
 model = tf.keras.models.load_model('text_recognition_model.keras')
 
 # Define constants (same as in the training code)
@@ -47,10 +47,6 @@ img_copy = img.copy()
 
 # Convert the image to grayscale
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-# Apply thresholding to create a binary image (optional, might remove this step for alignment)
-# This is not part of your model's preprocessing pipeline, so you can comment this out if needed
-# thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
 
 # Use pytesseract to get character bounding boxes, NOT predictions
 items = pytesseract.image_to_boxes(img)
@@ -103,9 +99,9 @@ for detail in items.splitlines():
     cv2.imshow("Letter Image", resized_letter_img[0, :, :, 0])  # Show the grayscale image
     cv2.waitKey(0)  # Wait for key press to move to the next letter
 
-    # Predict the letter using your model (not pytesseract)
+    # Predict the letter using model 
     prediction = model.predict(resized_letter_img)
-    predicted_char = letter_list[np.argmax(prediction)]  # From your model
+    predicted_char = letter_list[np.argmax(prediction)] 
     detected += predicted_char  # Append only model predictions
     print(f"Bounding box: {x1, y1, x2, y2}")
     print(f"Model prediction probabilities: {prediction}")
