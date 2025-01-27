@@ -51,7 +51,7 @@ for letter in letter_list:
     random.shuffle(dir_list)
 
     # Calculate the split index
-    split_index = 8
+    split_index = round((len(dir_list) * 20) / 100)
 
     # Split the data into training and test sets
     train_files = dir_list[split_index:]
@@ -154,7 +154,7 @@ datagen.fit(train_images)
 # Fit the model using the augmented data, run the model
 history = model.fit(
     datagen.flow(train_images, train_labels_encoded, batch_size=32),  # Augmented data generator
-    epochs=175, 
+    epochs=150, 
     validation_data=(test_images, test_labels_encoded)  # Validation data remains unaugmented
 )
 
@@ -170,4 +170,6 @@ for i in range(len(test_images)-1):
 
 test_loss, test_accuracy = model.evaluate(test_images, test_labels_encoded)
 print(f"Test accuracy: {test_accuracy:.2f}")
+model.save("./text_recognition_model.keras")
+
 

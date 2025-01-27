@@ -5,7 +5,7 @@ import pytesseract
 from pytesseract import Output
 
 # Load the image
-filename = 'image5.png'
+filename = 'image13.png'
 image = cv2.imread(filename)
 
 class Color:
